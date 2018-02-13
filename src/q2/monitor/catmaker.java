@@ -33,8 +33,8 @@ public class catmaker {
         Thread whiskerAttacher_1 = new Thread(new WhiskerAttacher(heads_incomplete, heads_complete), "Whisker Attacher 1");
         Thread whiskerAttacher_2 = new Thread(new WhiskerAttacher(heads_incomplete, heads_complete), "Whisker Attacher 2");
 
-        Thread[] robots = {legMaker_1, legMaker_2, tailAttacher_1, tailAttacher_2, legAttacher_1, legAttacher_2,
-                eyeAttacher_1, eyeAttacher_2, whiskerAttacher_1, whiskerAttacher_2};
+        Thread[] robots = {legAttacher_1, legAttacher_2, tailAttacher_1, tailAttacher_2, legMaker_1, legMaker_2,
+                whiskerAttacher_1, whiskerAttacher_2, eyeAttacher_1, eyeAttacher_2};
 
         Thread catMaker = new Thread(() -> {
             long idleTime = 0;
@@ -75,7 +75,6 @@ public class catmaker {
             for (Thread robot: robots) {
                 robot.interrupt();
             }
-            System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
         }, "Cat Maker");
 
         catMaker.start();

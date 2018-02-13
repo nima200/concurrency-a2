@@ -26,6 +26,7 @@ public class TailAttacher implements Runnable {
                 aBodies_incomplete.notify();
             }
             try {
+                /* Simulate assembly time */
                 Thread.sleep(Util.randInt(10, 20));
             } catch (InterruptedException ignored) {
                 System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);

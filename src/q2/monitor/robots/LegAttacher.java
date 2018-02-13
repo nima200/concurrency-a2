@@ -111,6 +111,7 @@ public class LegAttacher implements Runnable {
             }
 
             try {
+                /* Simulate assembly time */
                 Thread.sleep(Util.randInt(30, 50));
             } catch (InterruptedException ignored) {
                 System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);

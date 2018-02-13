@@ -48,6 +48,7 @@ public class WhiskerAttacher implements Runnable {
             }
             /* Simulate the assembly process by sleeping for 20-60ms */
             try {
+                /* Simulate assembly time */
                 Thread.sleep(Util.randInt(20, 60));
             } catch (InterruptedException ignored) {
                 System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
