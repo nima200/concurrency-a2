@@ -1,9 +1,9 @@
 package q2.monitor;
 
-import q2.monitor.parts.Body;
-import q2.monitor.parts.Cat;
-import q2.monitor.parts.Head;
-import q2.monitor.parts.Leg;
+import q2.parts.Body;
+import q2.parts.Cat;
+import q2.parts.Head;
+import q2.parts.Leg;
 import q2.monitor.robots.*;
 
 import java.util.*;
@@ -41,12 +41,15 @@ public class catmaker {
             while (cats.size() < 250) {
                 Body body;
                 Head head;
+                long start = System.currentTimeMillis();
                 synchronized (bodies_complete) {
+                    long stop = System.currentTimeMillis();
+                    idleTime += stop - start;
                     while (bodies_complete.isEmpty()) {
                         try {
-                            long start = System.currentTimeMillis();
+                            start = System.currentTimeMillis();
                             bodies_complete.wait();
-                            long stop = System.currentTimeMillis();
+                            stop = System.currentTimeMillis();
                             idleTime += stop - start;
                         } catch (InterruptedException ignored) {
                             System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
@@ -55,12 +58,15 @@ public class catmaker {
                     }
                     body = bodies_complete.pop();
                 }
+                start = System.currentTimeMillis();
                 synchronized (heads_complete) {
+                    long stop = System.currentTimeMillis();
+                    idleTime += stop - start;
                     while (heads_complete.isEmpty()) {
                         try {
-                            long start = System.currentTimeMillis();
+                            start = System.currentTimeMillis();
                             heads_complete.wait();
-                            long stop = System.currentTimeMillis();
+                            stop = System.currentTimeMillis();
                             idleTime += stop - start;
                         } catch (InterruptedException pE) {
                             System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);

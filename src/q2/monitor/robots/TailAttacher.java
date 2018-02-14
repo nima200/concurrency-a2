@@ -1,7 +1,7 @@
 package q2.monitor.robots;
 
-import q2.monitor.parts.Body;
-import q2.monitor.parts.Tail;
+import q2.parts.Body;
+import q2.parts.Tail;
 import util.Util;
 
 import java.util.LinkedList;
@@ -9,7 +9,7 @@ import java.util.LinkedList;
 public class TailAttacher implements Runnable {
 
     private final LinkedList<Body> aBodies_incomplete;
-    private final long idleTime = 0;
+    private long idleTime = 0;
 
 
     public TailAttacher(LinkedList<Body> pBodies_incomplete) {
@@ -21,7 +21,10 @@ public class TailAttacher implements Runnable {
         while(true) {
             Body body = new Body();
             body.attachTail(new Tail());
+            long start = System.currentTimeMillis();
             synchronized (aBodies_incomplete) {
+                long stop = System.currentTimeMillis();
+                idleTime += stop - start;
                 aBodies_incomplete.push(body);
                 aBodies_incomplete.notify();
             }

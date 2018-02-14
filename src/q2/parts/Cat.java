@@ -1,4 +1,4 @@
-package q2.monitor.parts;
+package q2.parts;
 
 public class Cat {
     private Head aHead;

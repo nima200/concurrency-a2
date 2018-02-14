@@ -1,4 +1,4 @@
-package q2.monitor.parts;
+package q2.parts;
 
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -1,7 +1,7 @@
 package q2.monitor.robots;
 
-import q2.monitor.parts.Leg;
-import q2.monitor.parts.Toe;
+import q2.parts.Leg;
+import q2.parts.Toe;
 import util.Util;
 
 import java.util.LinkedList;
@@ -26,7 +26,10 @@ public class LegMaker implements Runnable {
                 /* 5 Toes for front legs*/
                 Toe[] toes = {new Toe(), new Toe(), new Toe(), new Toe(), new Toe()};
                 Leg leg = new Leg(toes);
+                long start = System.currentTimeMillis();
                 synchronized (front_legs) {
+                    long stop = System.currentTimeMillis();
+                    idleTime += stop - start;
                     front_legs.push(leg);
                     front_legs.notify();
                 }
@@ -34,7 +37,10 @@ public class LegMaker implements Runnable {
                 /* 4 Toes for hind legs */
                 Toe[] toes = {new Toe(), new Toe(), new Toe(), new Toe()};
                 Leg leg = new Leg(toes);
+                long start = System.currentTimeMillis();
                 synchronized (hind_legs) {
+                    long stop = System.currentTimeMillis();
+                    idleTime += stop - start;
                     hind_legs.push(leg);
                     hind_legs.notify();
                 }

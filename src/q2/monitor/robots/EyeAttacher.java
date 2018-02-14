@@ -1,7 +1,7 @@
 package q2.monitor.robots;
 
-import q2.monitor.parts.Eye;
-import q2.monitor.parts.Head;
+import q2.parts.Eye;
+import q2.parts.Head;
 import util.Util;
 
 import java.util.LinkedList;
@@ -22,9 +22,12 @@ public class EyeAttacher implements Runnable {
             Eye[] eyes = {new Eye(), new Eye()};
             head.attachEyes(eyes);
             /* Only one robot may access a bin at a time */
+            long start = System.currentTimeMillis();
             synchronized (aHeads_incomplete) {
+                long stop = System.currentTimeMillis();
                 /* Put head at the end of list */
                 aHeads_incomplete.push(head);
+                idleTime += stop - start;
                 /* Notify threads waiting on the list, if any */
                 aHeads_incomplete.notify();
             }

@@ -1,7 +1,7 @@
 package q2.monitor.robots;
 
-import q2.monitor.parts.Head;
-import q2.monitor.parts.Whisker;
+import q2.parts.Head;
+import q2.parts.Whisker;
 import util.Util;
 
 import java.util.LinkedList;
@@ -22,13 +22,16 @@ public class WhiskerAttacher implements Runnable {
         while(true) {
             Head head;
             /* Only one robot can access a bin at a time */
+            long start = System.currentTimeMillis();
             synchronized (aHeads_incomplete) {
+                long stop = System.currentTimeMillis();
+                idleTime += stop - start;
                 /* Wait until someone puts on the eyes for the head */
                 while(aHeads_incomplete.isEmpty()) {
                     try {
-                        long start = System.currentTimeMillis();
+                        start = System.currentTimeMillis();
                         aHeads_incomplete.wait();
-                        long stop = System.currentTimeMillis();
+                        stop = System.currentTimeMillis();
                         idleTime += stop - start;
                     } catch (InterruptedException ignored) {
                         System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
@@ -40,7 +43,10 @@ public class WhiskerAttacher implements Runnable {
             Whisker[] whiskers = {new Whisker(), new Whisker(), new Whisker(), new Whisker(), new Whisker(), new Whisker()};
             head.attachWhiskers(whiskers);
             /* Only one robot can access a bin at a time */
+            start = System.currentTimeMillis();
             synchronized (aHeads_complete) {
+                long stop = System.currentTimeMillis();
+                idleTime += stop - start;
                 /* Put head at the end of queue */
                 aHeads_complete.push(head);
                 /* If someone was waiting for a completed head, notify them that it's ready */

@@ -1,7 +1,7 @@
 package q2.monitor.robots;
 
-import q2.monitor.parts.Body;
-import q2.monitor.parts.Leg;
+import q2.parts.Body;
+import q2.parts.Leg;
 import util.Util;
 
 import java.util.LinkedList;
@@ -27,13 +27,16 @@ public class LegAttacher implements Runnable {
             Body body;
             Leg[] frontLegs = new Leg[2];
             Leg[] hindlegs = new Leg[2];
+            long start = System.currentTimeMillis();
             synchronized (aBodies_incomplete) {
+                long stop = System.currentTimeMillis();
+                idleTime += stop - start;
                 /* Wait for a body to get a tail */
                 while(aBodies_incomplete.isEmpty()) {
                     try {
-                        long start = System.currentTimeMillis();
+                        start = System.currentTimeMillis();
                         aBodies_incomplete.wait();
-                        long stop = System.currentTimeMillis();
+                        stop = System.currentTimeMillis();
                         idleTime += stop - start;
                     } catch (InterruptedException ignored) {
                         System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
@@ -43,13 +46,16 @@ public class LegAttacher implements Runnable {
                 /* Take the body and release the bin */
                 body = aBodies_incomplete.pop();
             }
+            start = System.currentTimeMillis();
             synchronized (aFrontLegs) {
+                long stop = System.currentTimeMillis();
+                idleTime += stop - start;
                 /* Wait for a front leg */
                 while(aFrontLegs.isEmpty()) {
                     try {
-                        long start = System.currentTimeMillis();
+                        start = System.currentTimeMillis();
                         aFrontLegs.wait();
-                        long stop = System.currentTimeMillis();
+                        stop = System.currentTimeMillis();
                         idleTime += stop - start;
                     } catch (InterruptedException ignored) {
                         System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
@@ -61,9 +67,9 @@ public class LegAttacher implements Runnable {
                 /* NOTE: Did not combine with the above to not query bin size */
                 while(aFrontLegs.isEmpty()) {
                     try {
-                        long start = System.currentTimeMillis();
+                        start = System.currentTimeMillis();
                         aFrontLegs.wait();
-                        long stop = System.currentTimeMillis();
+                        stop = System.currentTimeMillis();
                         idleTime += stop - start;
                     } catch (InterruptedException ignored) {
                         System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
@@ -72,13 +78,16 @@ public class LegAttacher implements Runnable {
                 }
                 frontLegs[1] = aFrontLegs.pop();
             }
+            start = System.currentTimeMillis();
             synchronized (aHindLegs) {
+                long stop = System.currentTimeMillis();
+                idleTime += stop - start;
                 /* Wait for a hind leg */
                 while(aHindLegs.isEmpty()) {
                     try {
-                        long start = System.currentTimeMillis();
+                        start = System.currentTimeMillis();
                         aHindLegs.wait();
-                        long stop = System.currentTimeMillis();
+                        stop = System.currentTimeMillis();
                         idleTime += stop - start;
                     } catch (InterruptedException ignored) {
                         System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
@@ -90,9 +99,9 @@ public class LegAttacher implements Runnable {
                 /* NOTE: Did not combine with the above to not query bin size */
                 while(aHindLegs.isEmpty()) {
                     try {
-                        long start = System.currentTimeMillis();
+                        start = System.currentTimeMillis();
                         aHindLegs.wait();
-                        long stop = System.currentTimeMillis();
+                        stop = System.currentTimeMillis();
                         idleTime += stop - start;
                     } catch (InterruptedException ignored) {
                         System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
@@ -105,7 +114,10 @@ public class LegAttacher implements Runnable {
             body.attachForeLegs(frontLegs);
             body.attachHindLegs(hindlegs);
             /* Place completed body in bin and wake some thread waiting */
+            start = System.currentTimeMillis();
             synchronized (aBodies_complete) {
+                long stop = System.currentTimeMillis();
+                idleTime += stop - start;
                 aBodies_complete.push(body);
                 aBodies_complete.notify();
             }
