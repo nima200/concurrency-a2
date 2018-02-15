@@ -34,10 +34,10 @@ public class EyeAttacher implements Runnable {
                 idleTime += (stop - start);
                 /* Put created head in bin */
                 aHeads_incomplete.push(head);
-                /* Notify about production */
-                aHeads_inc_produced.release();
                 /* Let go of the bin */
                 aHeads_inc_binKey.release();
+                /* Notify about production */
+                aHeads_inc_produced.release();
             } catch (InterruptedException ignored) {
                 System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
                 return;

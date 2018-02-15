@@ -41,8 +41,8 @@ public class LegMaker implements Runnable {
                 /* 5 Toes for front legs*/
                 Toe[] toes = {new Toe(), new Toe(), new Toe(), new Toe(), new Toe()};
                 Leg leg = new Leg(toes);
-                /* Get access to the bin */
                 try {
+                    /* Get access to the bin */
                     start = System.currentTimeMillis();
                     fLeg_binKey.acquire();
                     stop = System.currentTimeMillis();
@@ -61,8 +61,8 @@ public class LegMaker implements Runnable {
                 /* 4 Toes for hind legs */
                 Toe[] toes = {new Toe(), new Toe(), new Toe(), new Toe()};
                 Leg leg = new Leg(toes);
-                /* Get access to the bin */
                 try {
+                    /* Get access to the bin */
                     start = System.currentTimeMillis();
                     hLeg_binKey.acquire();
                     stop = System.currentTimeMillis();

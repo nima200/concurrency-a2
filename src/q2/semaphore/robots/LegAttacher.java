@@ -59,8 +59,8 @@ public class LegAttacher implements Runnable {
 
             long start;
             long stop;
-            /* Wait for a body to get created */
             try {
+                /* Wait for a body to get created */
                 start = System.currentTimeMillis();
                 aBodies_inc_produced.acquire();
                 stop = System.currentTimeMillis();
@@ -74,34 +74,9 @@ public class LegAttacher implements Runnable {
                 body = aBodies_incomplete.pop();
                 /* Release access to bin */
                 aBodies_inc_binKey.release();
-            } catch (InterruptedException ignored) {
-                System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
-                return;
-            }
-            /* Wait for two front legs to get created */
-            try {
+                /* Wait for two front legs to get created */
                 start = System.currentTimeMillis();
                 aFrontLegs_produced.acquire(2);
-                stop = System.currentTimeMillis();
-                idleTime += stop - start;
-                /* Wait for access to bin */
-                start = System.currentTimeMillis();
-                aBodies_inc_binKey.acquire();
-                stop = System.currentTimeMillis();
-                idleTime += stop - start;
-                /* Take the two front legs */
-                frontLegs[0] = aFrontLegs.pop();
-                frontLegs[1] = aFrontLegs.pop();
-                /* Release access to the bin */
-                aFrontLegs_binKey.release();
-            } catch (InterruptedException ignored) {
-                System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
-                return;
-            }
-            /* Wait for two hindlegs to get created */
-            try {
-                start = System.currentTimeMillis();
-                aHindLegs_produced.acquire(2);
                 stop = System.currentTimeMillis();
                 idleTime += stop - start;
                 /* Wait for access to bin */
@@ -109,34 +84,39 @@ public class LegAttacher implements Runnable {
                 aFrontLegs_binKey.acquire();
                 stop = System.currentTimeMillis();
                 idleTime += stop - start;
+                /* Take the two front legs */
+                frontLegs[0] = aFrontLegs.pop();
+                frontLegs[1] = aFrontLegs.pop();
+                /* Release access to the bin */
+                aFrontLegs_binKey.release();
+                /* Wait for two hindlegs to get created */
+                start = System.currentTimeMillis();
+                aHindLegs_produced.acquire(2);
+                stop = System.currentTimeMillis();
+                idleTime += stop - start;
+                /* Wait for access to bin */
+                start = System.currentTimeMillis();
+                aHindLegs_binKey.acquire();
+                stop = System.currentTimeMillis();
+                idleTime += stop - start;
                 /* Take the two hind legs */
                 hindLegs[0] = aHindLegs.pop();
                 hindLegs[1] = aHindLegs.pop();
                 /* Release access to the bin */
                 aHindLegs_binKey.release();
-            } catch (InterruptedException ignored) {
-                System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
-                return;
-            }
-            /* Attach legs to body */
-            body.attachForeLegs(frontLegs);
-            body.attachHindLegs(hindLegs);
-            /* Wait for access to bin */
-            try {
+                /* Attach legs to body */
+                body.attachForeLegs(frontLegs);
+                body.attachHindLegs(hindLegs);
+                /* Wait for access to bin */
                 start = System.currentTimeMillis();
                 aBodies_com_binKey.acquire();
                 stop = System.currentTimeMillis();
                 idleTime += stop - start;
                 aBodies_complete.push(body);
-                /* Inform body produced */
-                aBodies_com_produced.release();
                 /* Release access to bin */
                 aBodies_com_binKey.release();
-            } catch (InterruptedException ignored) {
-                System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
-                return;
-            }
-            try {
+                /* Inform body produced */
+                aBodies_com_produced.release();
                 /* Simulate assembly time */
                 Thread.sleep(Util.randInt(30, 50));
             } catch (InterruptedException ignored) {

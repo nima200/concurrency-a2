@@ -81,6 +81,7 @@ public class catmaker {
             for (Thread robot: robots) {
                 robot.interrupt();
             }
+            System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
         }, "Cat Maker");
 
         catMaker.start();
