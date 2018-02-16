@@ -2,6 +2,7 @@ package q2.monitor;
 
 import q2.monitor.robots.*;
 import q2.parts.*;
+import util.Util;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,18 +18,9 @@ public class catmaker {
             aBins.getWhiskers().push(new Whisker());
             aBins.getHeads().push(new Head());
             aBins.getEyes().push(new Eye());
-            aBins.getEyes().push(new Eye());
-            aBins.getLegs().push(new Leg());
-            aBins.getLegs().push(new Leg());
-            aBins.getLegs().push(new Leg());
             aBins.getLegs().push(new Leg());
             aBins.getTails().push(new Tail());
             aBins.getBodies().push(new Body());
-            aBins.getToes().push(new Toe());
-            aBins.getToes().push(new Toe());
-            aBins.getToes().push(new Toe());
-            aBins.getToes().push(new Toe());
-            aBins.getToes().push(new Toe());
             aBins.getToes().push(new Toe());
         }
 
@@ -87,6 +79,13 @@ public class catmaker {
                 /* Create the cat out of the completed head and body */
                 Cat cat = new Cat(head, body);
                 aCats.add(cat);
+                try {
+                    /* Simulate assembly */
+                    Thread.sleep(Util.randInt(10, 20));
+                } catch (InterruptedException ignored) {
+                    System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
+                    return;
+                }
             }
             for (Thread robot: robots) {
                 robot.interrupt();

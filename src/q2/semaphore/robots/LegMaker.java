@@ -2,85 +2,95 @@ package q2.semaphore.robots;
 
 import q2.parts.Leg;
 import q2.parts.Toe;
+import q2.semaphore.Bins;
 import util.Util;
 
-import java.util.LinkedList;
 import java.util.Random;
-import java.util.concurrent.Semaphore;
 
 public class LegMaker implements Runnable {
-    private final LinkedList<Leg> front_legs;
-    private final LinkedList<Leg> hind_legs;
-    private final Semaphore fLeg_binKey;
-    private final Semaphore fLeg_produced;
-    private final Semaphore hLeg_binKey;
-    private final Semaphore hLeg_produced;
-    private long idleTime;
 
-    public LegMaker(LinkedList<Leg> pFront_legs,
-                    LinkedList<Leg> pHind_legs,
-                    Semaphore pFLeg_binKey,
-                    Semaphore pFLeg_produced,
-                    Semaphore pHLeg_binKey,
-                    Semaphore pHLeg_produced) {
-        front_legs = pFront_legs;
-        hind_legs = pHind_legs;
-        fLeg_binKey = pFLeg_binKey;
-        fLeg_produced = pFLeg_produced;
-        hLeg_binKey = pHLeg_binKey;
-        hLeg_produced = pHLeg_produced;
+    private final Bins aBins;
+    private long idleTime = 0;
+
+    public LegMaker(Bins pBins) {
+        aBins = pBins;
     }
 
     @Override
     public void run() {
         long start;
         long stop;
-        while(true) {
-            Random random = new Random();
-            if (random.nextFloat() > 0.5) { /* Make a front leg */
-                /* 5 Toes for front legs*/
-                Toe[] toes = {new Toe(), new Toe(), new Toe(), new Toe(), new Toe()};
-                Leg leg = new Leg();
-                leg.addToes(toes);
-                try {
-                    /* Get access to the bin */
-                    start = System.currentTimeMillis();
-                    fLeg_binKey.acquire();
-                    stop = System.currentTimeMillis();
-                    idleTime += stop - start;
-                    /* Put created leg in bin */
-                    front_legs.push(leg);
-                    /* Let go of the bin */
-                    fLeg_binKey.release();
-                    /* Inform about leg creation */
-                    fLeg_produced.release();
-                } catch (InterruptedException ignored) {
-                    System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
-                    return;
-                }
-            } else { /* Make a hind leg */
-                /* 4 Toes for hind legs */
-                Toe[] toes = {new Toe(), new Toe(), new Toe(), new Toe()};
-                Leg leg = new Leg();
-                leg.addToes(toes);
-                try {
-                    /* Get access to the bin */
-                    start = System.currentTimeMillis();
-                    hLeg_binKey.acquire();
-                    stop = System.currentTimeMillis();
-                    idleTime += stop - start;
-                    /* Put created leg in the bin */
-                    hind_legs.push(leg);
-                    /* Let go of the bin */
-                    hLeg_binKey.release();
-                    /* Inform about leg production */
-                    hLeg_produced.release();
-                } catch (InterruptedException ignored) {
-                    System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
-                    return;
-                }
-            }
+        Random random = new Random();
+        while (true) {
             try {
+                /* Randomly decide between making a foreleg and a hind leg*/
+                if (random.nextFloat() >= 0.5) { /* Make a foreleg */
+                    /* Make space for 5 toes */
+                    Toe[] toes = new Toe[5];
+                    start = System.currentTimeMillis();
+                    /* Take 5 toes */
+                    aBins.getToeBin().getAccess();
+                    stop = System.currentTimeMillis();
+                    idleTime += stop - start;
+                    for (int i = 0; i < toes.length; i++) {
+                        toes[i] = aBins.getToeBin().pop();
+                    }
+                    aBins.getToeBin().releaseAccess();
+
+                    Leg leg;
+                    /* Take a leg from the legs bin */
+                    start = System.currentTimeMillis();
+                    aBins.getLegBin().getAccess();
+                    stop = System.currentTimeMillis();
+                    idleTime += stop - start;
+                    leg = aBins.getLegBin().pop();
+                    aBins.getLegBin().releaseAccess();
+
+                    /* Attach toes to leg */
+                    leg.addToes(toes);
+
+                    /* Put leg in fore legs bin and notify about production */
+                    start = System.currentTimeMillis();
+                    aBins.getForeLegs().getAccess();
+                    stop = System.currentTimeMillis();
+                    idleTime += stop - start;
+                    aBins.getForeLegs().push(leg);
+                    aBins.getForeLegs().releaseAccess();
+                    aBins.getForeLegs().produced();
+                } else { /* Make a hind leg*/
+                    /* Make space for 4 toes */
+                    Toe[] toes = new Toe[4];
+                    /* Take 4 toes */
+                    start = System.currentTimeMillis();
+                    aBins.getToeBin().getAccess();
+                    stop = System.currentTimeMillis();
+                    idleTime += stop - start;
+                    for (int i = 0; i < toes.length; i++) {
+                        toes[i] = aBins.getToeBin().pop();
+                    }
+                    aBins.getToeBin().releaseAccess();
+
+                    Leg leg;
+                    /* Take a leg from the legs bin */
+                    start = System.currentTimeMillis();
+                    aBins.getLegBin().getAccess();
+                    stop = System.currentTimeMillis();
+                    idleTime += stop - start;
+                    leg = aBins.getLegBin().pop();
+                    aBins.getLegBin().releaseAccess();
+
+                    /* Attach toes to leg */
+                    leg.addToes(toes);
+
+                    /* Put leg in hind legs bin and notify about production */
+                    start = System.currentTimeMillis();
+                    aBins.getHindLegs().getAccess();
+                    stop = System.currentTimeMillis();
+                    idleTime += stop - start;
+                    aBins.getHindLegs().push(leg);
+                    aBins.getHindLegs().releaseAccess();
+                    aBins.getHindLegs().produced();
+                }
                 /* Simulate assembly time */
                 Thread.sleep(Util.randInt(10, 20));
             } catch (InterruptedException ignored) {

@@ -2,121 +2,104 @@ package q2.semaphore.robots;
 
 import q2.parts.Body;
 import q2.parts.Leg;
+import q2.semaphore.Bins;
 import util.Util;
 
-import java.util.LinkedList;
-import java.util.concurrent.Semaphore;
-
 public class LegAttacher implements Runnable {
-    private final LinkedList<Body> aBodies_incomplete; /* Bodies with tail */
-    private final LinkedList<Body> aBodies_complete; /* Bodies with tail and legs */
-    private final LinkedList<Leg> aFrontLegs;
-    private final LinkedList<Leg> aHindLegs;
-    private final Semaphore aBodies_inc_binKey; /* Access key for bin */
-    private final Semaphore aBodies_inc_produced; /* Access key for bin */
-    private final Semaphore aBodies_com_binKey; /* Access key for bin */
-    private final Semaphore aBodies_com_produced; /* Access key for bin */
-    private final Semaphore aFrontLegs_produced; /* To notify about production of items */
-    private final Semaphore aFrontLegs_binKey; /* Access key for bin */
-    private final Semaphore aHindLegs_produced; /* To notify about production of items */
-    private final Semaphore aHindLegs_binKey; /* Access key for bin */
 
+    private final Bins aBins;
     private long idleTime = 0;
 
-    public LegAttacher(LinkedList<Body> pBodies_incomplete,
-                       LinkedList<Body> pBodies_complete,
-                       LinkedList<Leg> pFrontLegs,
-                       LinkedList<Leg> pHindLegs,
-                       Semaphore pBodies_inc_binKey,
-                       Semaphore pBodies_com_binKey,
-                       Semaphore pFrontLegs_binKey,
-                       Semaphore pHindLegs_binKey,
-                       Semaphore pFrontLegs_produced,
-                       Semaphore pHindLegs_produced,
-                       Semaphore pBodies_inc_produced,
-                       Semaphore pBodies_com_produced) {
-        aBodies_incomplete = pBodies_incomplete;
-        aBodies_complete = pBodies_complete;
-        aFrontLegs = pFrontLegs;
-        aHindLegs = pHindLegs;
-        aBodies_inc_binKey = pBodies_inc_binKey;
-        aBodies_com_binKey = pBodies_com_binKey;
-        aFrontLegs_produced = pFrontLegs_produced;
-        aHindLegs_produced = pHindLegs_produced;
-        aFrontLegs_binKey = pFrontLegs_binKey;
-        aHindLegs_binKey = pHindLegs_binKey;
-        aBodies_inc_produced = pBodies_inc_produced;
-        aBodies_com_produced = pBodies_com_produced;
+    public LegAttacher(Bins pBins) {
+        aBins = pBins;
     }
-
 
     @Override
     public void run() {
+        long start;
+        long stop;
         while (true) {
-            Body body;
-            Leg[] frontLegs = new Leg[2];
-            Leg[] hindLegs = new Leg[2];
-
-            long start;
-            long stop;
             try {
-                /* Wait for a body to get created */
+                Body body = null;
+                boolean bodyHadTail = false;
+                /* Check if there exists a body with a tail attached */
                 start = System.currentTimeMillis();
-                aBodies_inc_produced.acquire();
+                aBins.getBodyWithTail().getAccess();
                 stop = System.currentTimeMillis();
                 idleTime += stop - start;
-                /* Wait for access to bin */
+                if (!aBins.getBodyWithTail().isEmpty()) {
+                    body = aBins.getBodyWithTail().pop();
+                    bodyHadTail = true;
+                }
+                aBins.getBodyWithTail().releaseAccess();
+
+                /* Check if we got a body from the previous step,
+                 * If we didn't, take a blank body */
+                if (!bodyHadTail) {
+                    start = System.currentTimeMillis();
+                    aBins.getBodyBin().getAccess();
+                    stop = System.currentTimeMillis();
+                    idleTime += stop - start;
+                    body = aBins.getBodyBin().pop();
+                    aBins.getBodyBin().releaseAccess();
+                }
+
+                /* Make space for taking 2 fore legs */
+                Leg[] foreLegs = new Leg[2];
+                /* Wait for 2 fore legs to get created */
                 start = System.currentTimeMillis();
-                aBodies_inc_binKey.acquire();
+                aBins.getForeLegs().consume(2);
                 stop = System.currentTimeMillis();
                 idleTime += stop - start;
-                /* Take the body */
-                body = aBodies_incomplete.pop();
-                /* Release access to bin */
-                aBodies_inc_binKey.release();
-                /* Wait for two front legs to get created */
+                /* Take 2 fore legs */
                 start = System.currentTimeMillis();
-                aFrontLegs_produced.acquire(2);
+                aBins.getForeLegs().getAccess();
                 stop = System.currentTimeMillis();
                 idleTime += stop - start;
-                /* Wait for access to bin */
+                foreLegs[0] = aBins.getForeLegs().pop();
+                foreLegs[1] = aBins.getForeLegs().pop();
+                aBins.getForeLegs().releaseAccess();
+
+                /* Make space for taking 2 hind legs */
+                Leg[] hindLegs = new Leg[2];
+                /* Wait for 2 hind legs to get produced */
                 start = System.currentTimeMillis();
-                aFrontLegs_binKey.acquire();
+                aBins.getHindLegs().consume(2);
                 stop = System.currentTimeMillis();
                 idleTime += stop - start;
-                /* Take the two front legs */
-                frontLegs[0] = aFrontLegs.pop();
-                frontLegs[1] = aFrontLegs.pop();
-                /* Release access to the bin */
-                aFrontLegs_binKey.release();
-                /* Wait for two hindlegs to get created */
+                /* Take 2 hind legs */
                 start = System.currentTimeMillis();
-                aHindLegs_produced.acquire(2);
+                aBins.getHindLegs().getAccess();
                 stop = System.currentTimeMillis();
                 idleTime += stop - start;
-                /* Wait for access to bin */
-                start = System.currentTimeMillis();
-                aHindLegs_binKey.acquire();
-                stop = System.currentTimeMillis();
-                idleTime += stop - start;
-                /* Take the two hind legs */
-                hindLegs[0] = aHindLegs.pop();
-                hindLegs[1] = aHindLegs.pop();
-                /* Release access to the bin */
-                aHindLegs_binKey.release();
-                /* Attach legs to body */
-                body.attachForeLegs(frontLegs);
+                hindLegs[0] = aBins.getHindLegs().pop();
+                hindLegs[1] = aBins.getHindLegs().pop();
+                aBins.getHindLegs().releaseAccess();
+
+                /* Attach the legs to the body */
+                body.attachForeLegs(foreLegs);
                 body.attachHindLegs(hindLegs);
-                /* Wait for access to bin */
-                start = System.currentTimeMillis();
-                aBodies_com_binKey.acquire();
-                stop = System.currentTimeMillis();
-                idleTime += stop - start;
-                aBodies_complete.push(body);
-                /* Release access to bin */
-                aBodies_com_binKey.release();
-                /* Inform body produced */
-                aBodies_com_produced.release();
+
+                /* If body had a tail, place it in the completed bodies bin
+                 * If not, place it it in the bodies with legs bin */
+                if (bodyHadTail) {
+                    start = System.currentTimeMillis();
+                    aBins.getBodyCompleted().getAccess();
+                    stop = System.currentTimeMillis();
+                    idleTime += stop - start;
+                    aBins.getBodyCompleted().push(body);
+                    aBins.getBodyCompleted().releaseAccess();
+                    /* Notify about production */
+                    aBins.getBodyCompleted().produced();
+                } else {
+                    start = System.currentTimeMillis();
+                    aBins.getBodyWithLegs().getAccess();
+                    stop = System.currentTimeMillis();
+                    idleTime += stop - start;
+                    aBins.getBodyWithLegs().push(body);
+                    aBins.getBodyWithLegs().releaseAccess();
+                    /* Do not need to inform about production */
+                }
                 /* Simulate assembly time */
                 Thread.sleep(Util.randInt(30, 50));
             } catch (InterruptedException ignored) {

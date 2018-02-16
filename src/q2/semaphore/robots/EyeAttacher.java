@@ -2,49 +2,82 @@ package q2.semaphore.robots;
 
 import q2.parts.Eye;
 import q2.parts.Head;
+import q2.semaphore.Bins;
 import util.Util;
-
-import java.util.LinkedList;
-import java.util.concurrent.Semaphore;
 
 public class EyeAttacher implements Runnable {
 
-    private final LinkedList<Head> aHeads_incomplete; /* Bin to put heads with eyes */
-    private final Semaphore aHeads_inc_binKey; /* Semaphore key to the bin */
-    private final Semaphore aHeads_inc_produced; /* To notify about production of items */
+    private final Bins aBins;
     private long idleTime = 0;
 
-    public EyeAttacher(LinkedList<Head> pHeads_incomplete, Semaphore pHeads_inc_binKey, Semaphore pHeads_inc_produced) {
-        aHeads_incomplete = pHeads_incomplete;
-        aHeads_inc_binKey = pHeads_inc_binKey;
-        aHeads_inc_produced = pHeads_inc_produced;
+    public EyeAttacher(Bins pBins) {
+        aBins = pBins;
     }
 
     @Override
     public void run() {
-        while(true) {
-            Head head = new Head();
-            Eye[] eyes = {new Eye(), new Eye()};
-            head.attachEyes(eyes);
-            /* Only one robot may access a bin at a time */
+        long start;
+        long stop;
+        while (true) {
             try {
-                long start = System.currentTimeMillis();
-                aHeads_inc_binKey.acquire();
-                long stop = System.currentTimeMillis();
-                idleTime += (stop - start);
-                /* Put created head in bin */
-                aHeads_incomplete.push(head);
-                /* Let go of the bin */
-                aHeads_inc_binKey.release();
-                /* Notify about production */
-                aHeads_inc_produced.release();
-            } catch (InterruptedException ignored) {
-                System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
-                return;
-            }
+                Head head = null;
+                boolean headHadWhiskers = false;
+                /* Check if there exists a head with whiskers already */
+                start = System.currentTimeMillis();
+                aBins.getHeadWithWhiskers().getAccess();
+                stop = System.currentTimeMillis();
+                idleTime += stop - start;
+                if (!aBins.getHeadWithWhiskers().isEmpty()) {
+                    head = aBins.getHeadWithWhiskers().pop();
+                    headHadWhiskers = true;
+                }
+                aBins.getHeadWithWhiskers().releaseAccess();
 
-            try {
-                /* Simulate assembly time */
+                /* If we didn't get a head with whiskers, take a blank head */
+                if (!headHadWhiskers) {
+                    start = System.currentTimeMillis();
+                    aBins.getHeadBin().getAccess();
+                    stop = System.currentTimeMillis();
+                    idleTime += stop - start;
+                    head = aBins.getHeadBin().pop();
+                    aBins.getHeadBin().releaseAccess();
+                }
+
+                /* Make space for storing 2 eyes */
+                Eye[] eyes = new Eye[2];
+                /* Take two eyes */
+                start = System.currentTimeMillis();
+                aBins.getEyeBin().getAccess();
+                stop = System.currentTimeMillis();
+                idleTime += stop - start;
+                for (int i = 0; i < eyes.length; i++) {
+                    eyes[i] = aBins.getEyeBin().pop();
+                }
+                aBins.getEyeBin().releaseAccess();
+
+                /* Attach eyes to head */
+                head.attachEyes(eyes);
+
+                /* If head had whiskers, place it in completed heads bin
+                 * If not, place it in the heads with eyes bin */
+                if (headHadWhiskers) {
+                    start = System.currentTimeMillis();
+                    aBins.getHeadCompleted().getAccess();
+                    stop = System.currentTimeMillis();
+                    idleTime += stop - start;
+                    aBins.getHeadCompleted().push(head);
+                    aBins.getHeadCompleted().releaseAccess();
+                    /* Notify about production */
+                    aBins.getHeadCompleted().produced();
+                } else {
+                    start = System.currentTimeMillis();
+                    aBins.getHeadWithEyes().getAccess();
+                    stop = System.currentTimeMillis();
+                    idleTime += stop - start;
+                    aBins.getHeadWithEyes().push(head);
+                    aBins.getHeadWithEyes().releaseAccess();
+                    /* Do not need to inform about production */
+                }
                 Thread.sleep(Util.randInt(10, 30));
             } catch (InterruptedException ignored) {
                 System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
