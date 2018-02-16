@@ -8,8 +8,12 @@ public class Leg {
 
     private List<Toe> aToes;
 
-    public Leg(Toe... pToes) {
+    public Leg() {
         aToes = new ArrayList<>();
+    }
+
+    public void addToes(Toe[] pToes) {
         aToes.addAll(Arrays.asList(pToes));
     }
+
 }

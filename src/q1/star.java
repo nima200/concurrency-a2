@@ -9,8 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class star {
-    private static final List<Thread> aThreads = new ArrayList<>();
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, InterruptedException {
         int m = 0, c = 0;
         try {
             m = Integer.parseInt(args[0]);
@@ -21,8 +20,6 @@ public class star {
         } catch (NumberFormatException e) {
             System.out.println("Both arguments must be integers!");
         }
-
-
 
 
         Vertex v_1 = new Vertex(-1.0, 5.0);
@@ -40,14 +37,18 @@ public class star {
         v_6.setNext(v_1); v_6.setPrevious(v_5);
 
         DLinkedList vertices = new DLinkedList(v_1);
-
+        List<Thread> movers = new ArrayList<>();
         for (int i = 0; i < m; i++) {
             Thread t = new Thread(new Mover(vertices, i, c));
+            movers.add(t);
             t.start();
         }
 
+        for (Thread mover: movers) {
+            mover.join();
+        }
+
         BufferedImage img = new BufferedImage(1920,1080,BufferedImage.TYPE_INT_ARGB);
-        Color red = new Color(255, 0, 0);
         Color black = new Color(0, 0, 0);
         Vertex current = v_1;
 
@@ -58,19 +59,19 @@ public class star {
         for (int i = 0; i < 1080; i++) {
             img.setRGB(960, i, black.getRGB());
         }
+        Graphics graphics = img.getGraphics();
+        graphics.setColor(Color.BLACK);
 
+        Polygon p = new Polygon();
         do {
-            int x = 960 + (int) ((current.getX()) * 300);
-            int y = 540 + (int) ((current.getY()) * 300);
-            Graphics2D g = (Graphics2D) img.getGraphics();
-            g.setColor(Color.BLACK);
-            g.fillOval(x, y, 10, 10);
-            System.out.println("x: " + ((current.getX()) * 400)  + " y: " + ((current.getY()) * 400));
+            int x = 960 + (int) ((current.getX()) * (1920 / 8));
+            int y = 540 + (int) ((current.getY()) * (1080 / 8));
+            p.addPoint(x, y);
+            graphics.fillOval(x, y, 5, 5);
+            System.out.println("x: " + ((current.getX()) * (1920 / 8))  + " y: " + ((current.getY()) * (1080 / 8)));
             current = current.getNext();
         } while(current != v_1);
-
-
-
+        graphics.drawPolygon(p);
         File outputfile = new File("outputimage.png");
         ImageIO.write(img, "png", outputfile);
     }

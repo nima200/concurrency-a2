@@ -1,52 +1,98 @@
 package q2.monitor.robots;
 
+import q2.monitor.Bins;
 import q2.parts.Leg;
 import q2.parts.Toe;
 import util.Util;
 
-import java.util.LinkedList;
 import java.util.Random;
 
 public class LegMaker implements Runnable {
 
-    private final LinkedList<Leg> front_legs;
-    private final LinkedList<Leg> hind_legs;
+    private final Bins aBins;
     private long idleTime = 0;
 
-    public LegMaker(LinkedList<Leg> pFront_legs, LinkedList<Leg> pHind_legs) {
-        front_legs = pFront_legs;
-        hind_legs = pHind_legs;
+
+    public LegMaker(Bins pBins) {
+        aBins = pBins;
     }
 
     @Override
     public void run() {
+        Random random = new Random();
+        long start;
+        long stop;
         while (true) {
-            Random random = new Random();
-            if (random.nextFloat() > 0.5) { /* Make a front leg */
-                /* 5 Toes for front legs*/
-                Toe[] toes = {new Toe(), new Toe(), new Toe(), new Toe(), new Toe()};
-                Leg leg = new Leg(toes);
-                long start = System.currentTimeMillis();
-                synchronized (front_legs) {
-                    long stop = System.currentTimeMillis();
+            if (random.nextFloat() >= 0.5) { /* Make a fore leg */
+                /* Make space for storing 5 toes */
+                Toe[] toes = new Toe[5];
+                start = System.currentTimeMillis();
+                synchronized (aBins.getToes()) {
+                    /* Track time asleep */
+                    stop = System.currentTimeMillis();
                     idleTime += stop - start;
-                    front_legs.push(leg);
-                    front_legs.notify();
+                    /* Take 5 toes from toe bin */
+                    for (int i = 0; i < toes.length; i++) {
+                        toes[i] = aBins.getToes().pop();
+                    }
+                }
+
+                Leg foreLeg;
+                start = System.currentTimeMillis();
+                synchronized (aBins.getLegs()) {
+                    stop = System.currentTimeMillis();
+                    idleTime += stop - start;
+                    foreLeg = aBins.getLegs().pop();
+                }
+
+                /* Attach toes to leg to complete foreleg */
+                foreLeg.addToes(toes);
+
+                start = System.currentTimeMillis();
+                synchronized (aBins.getForeLegs()) {
+                    stop = System.currentTimeMillis();
+                    /* Add foreleg to bin of forelegs */
+                    aBins.getForeLegs().push(foreLeg);
+                    /* Notify others about creation */
+                    aBins.getForeLegs().notify();
                 }
             } else { /* Make a hind leg */
-                /* 4 Toes for hind legs */
-                Toe[] toes = {new Toe(), new Toe(), new Toe(), new Toe()};
-                Leg leg = new Leg(toes);
-                long start = System.currentTimeMillis();
-                synchronized (hind_legs) {
-                    long stop = System.currentTimeMillis();
+                /* Make space for storing 4 toes */
+                Toe[] toes = new Toe[4];
+                start = System.currentTimeMillis();
+                synchronized (aBins.getToes()) {
+                    /* Track time asleep */
+                    stop = System.currentTimeMillis();
                     idleTime += stop - start;
-                    hind_legs.push(leg);
-                    hind_legs.notify();
+                    /* Take 4 toes from toe bin */
+                    for (int i = 0; i < toes.length; i++) {
+                        toes[i] = aBins.getToes().pop();
+                    }
+                }
+
+                Leg hindLeg;
+                start = System.currentTimeMillis();
+                synchronized (aBins.getLegs()) {
+                    stop = System.currentTimeMillis();
+                    idleTime += stop - start;
+                    hindLeg = aBins.getLegs().pop();
+                }
+
+                /* Attach toes to leg to complete hind leg */
+                hindLeg.addToes(toes);
+
+                start = System.currentTimeMillis();
+                synchronized (aBins.getHindLegs()) {
+                    stop = System.currentTimeMillis();
+                    idleTime += stop - start;
+                    /* Add foreleg to bin of hind legs */
+                    aBins.getHindLegs().push(hindLeg);
+                    /* Notify others about creation */
+                    aBins.getHindLegs().notify();
                 }
             }
+            /* Simulate assembly time */
             try {
-                /* Simulate assembly time */
                 Thread.sleep(Util.randInt(10, 20));
             } catch (InterruptedException ignored) {
                 System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);

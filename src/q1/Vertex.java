@@ -65,6 +65,14 @@ public class Vertex {
         next = pNext;
     }
 
+    public void setX(double pX) {
+        aX = pX;
+    }
+
+    public void setY(double pY) {
+        aY = pY;
+    }
+
     public static double calculateAngle(double pX, double pY) {
         return atan2(pY, pX) - atan2(0, 1);
     }

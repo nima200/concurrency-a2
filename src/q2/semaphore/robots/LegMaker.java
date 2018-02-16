@@ -40,7 +40,8 @@ public class LegMaker implements Runnable {
             if (random.nextFloat() > 0.5) { /* Make a front leg */
                 /* 5 Toes for front legs*/
                 Toe[] toes = {new Toe(), new Toe(), new Toe(), new Toe(), new Toe()};
-                Leg leg = new Leg(toes);
+                Leg leg = new Leg();
+                leg.addToes(toes);
                 try {
                     /* Get access to the bin */
                     start = System.currentTimeMillis();
@@ -60,7 +61,8 @@ public class LegMaker implements Runnable {
             } else { /* Make a hind leg */
                 /* 4 Toes for hind legs */
                 Toe[] toes = {new Toe(), new Toe(), new Toe(), new Toe()};
-                Leg leg = new Leg(toes);
+                Leg leg = new Leg();
+                leg.addToes(toes);
                 try {
                     /* Get access to the bin */
                     start = System.currentTimeMillis();
@@ -73,7 +75,7 @@ public class LegMaker implements Runnable {
                     hLeg_binKey.release();
                     /* Inform about leg production */
                     hLeg_produced.release();
-                } catch (InterruptedException pE) {
+                } catch (InterruptedException ignored) {
                     System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
                     return;
                 }

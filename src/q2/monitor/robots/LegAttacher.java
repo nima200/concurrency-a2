@@ -1,125 +1,135 @@
 package q2.monitor.robots;
 
+import q2.monitor.Bins;
 import q2.parts.Body;
 import q2.parts.Leg;
 import util.Util;
 
-import java.util.LinkedList;
-
 public class LegAttacher implements Runnable {
 
-    private final LinkedList<Body> aBodies_incomplete; /* Bodies with tail */
-    private final LinkedList<Body> aBodies_complete; /* Bodies with tail and legs */
-    private final LinkedList<Leg> aFrontLegs;
-    private final LinkedList<Leg> aHindLegs;
+    private final Bins aBins;
     private long idleTime = 0;
 
-    public LegAttacher(LinkedList<Body> pBodies_incomplete, LinkedList<Body> pBodies_complete, LinkedList<Leg> pFrontLegs, LinkedList<Leg> pHindLegs) {
-        aBodies_incomplete = pBodies_incomplete;
-        aBodies_complete = pBodies_complete;
-        aFrontLegs = pFrontLegs;
-        aHindLegs = pHindLegs;
+    public LegAttacher(Bins pBins) {
+        aBins = pBins;
     }
 
     @Override
     public void run() {
-        while(true) {
-            Body body;
-            Leg[] frontLegs = new Leg[2];
-            Leg[] hindlegs = new Leg[2];
-            long start = System.currentTimeMillis();
-            synchronized (aBodies_incomplete) {
-                long stop = System.currentTimeMillis();
-                idleTime += stop - start;
-                /* Wait for a body to get a tail */
-                while(aBodies_incomplete.isEmpty()) {
-                    try {
-                        start = System.currentTimeMillis();
-                        aBodies_incomplete.wait();
-                        stop = System.currentTimeMillis();
-                        idleTime += stop - start;
-                    } catch (InterruptedException ignored) {
-                        System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
-                        return;
-                    }
-                }
-                /* Take the body and release the bin */
-                body = aBodies_incomplete.pop();
-            }
+        long start;
+        long stop;
+        while (true) {
+            Body body = null;
+            boolean bodyHadTail = false;
+            /* Check if there exists a body with a tail attached */
             start = System.currentTimeMillis();
-            synchronized (aFrontLegs) {
-                long stop = System.currentTimeMillis();
+            synchronized (aBins.getBodyWithTail()) {
+                stop = System.currentTimeMillis();
                 idleTime += stop - start;
-                /* Wait for a front leg */
-                while(aFrontLegs.isEmpty()) {
-                    try {
-                        start = System.currentTimeMillis();
-                        aFrontLegs.wait();
-                        stop = System.currentTimeMillis();
-                        idleTime += stop - start;
-                    } catch (InterruptedException ignored) {
-                        System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
-                        return;
-                    }
+                if (!aBins.getBodyWithTail().isEmpty()) {
+                    body = aBins.getBodyWithTail().pop();
+                    bodyHadTail = true;
                 }
-                frontLegs[0] = aFrontLegs.pop();
-                /* Wait for another front leg */
-                /* NOTE: Did not combine with the above to not query bin size */
-                while(aFrontLegs.isEmpty()) {
-                    try {
-                        start = System.currentTimeMillis();
-                        aFrontLegs.wait();
-                        stop = System.currentTimeMillis();
-                        idleTime += stop - start;
-                    } catch (InterruptedException ignored) {
-                        System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
-                        return;
-                    }
-                }
-                frontLegs[1] = aFrontLegs.pop();
             }
-            start = System.currentTimeMillis();
-            synchronized (aHindLegs) {
-                long stop = System.currentTimeMillis();
-                idleTime += stop - start;
-                /* Wait for a hind leg */
-                while(aHindLegs.isEmpty()) {
-                    try {
-                        start = System.currentTimeMillis();
-                        aHindLegs.wait();
-                        stop = System.currentTimeMillis();
-                        idleTime += stop - start;
-                    } catch (InterruptedException ignored) {
-                        System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
-                        return;
-                    }
+            /* Check if we got a body from the previous step
+             * If we didn't, take a blank body */
+            if (!bodyHadTail) {
+                start = System.currentTimeMillis();
+                synchronized (aBins.getBodies()) {
+                    stop = System.currentTimeMillis();
+                    idleTime += stop - start;
+                    body = aBins.getBodies().pop();
                 }
-                hindlegs[0] = aHindLegs.pop();
-                /* Wait for another hind leg */
-                /* NOTE: Did not combine with the above to not query bin size */
-                while(aHindLegs.isEmpty()) {
-                    try {
-                        start = System.currentTimeMillis();
-                        aHindLegs.wait();
-                        stop = System.currentTimeMillis();
-                        idleTime += stop - start;
-                    } catch (InterruptedException ignored) {
-                        System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
-                        return;
-                    }
-                }
-                hindlegs[1] = aHindLegs.pop();
             }
-            /* Attach legs to body */
-            body.attachForeLegs(frontLegs);
-            body.attachHindLegs(hindlegs);
-            /* Place completed body in bin and wake some thread waiting */
+            /* Make space for taking 2 fore legs */
+            Leg[] foreLegs = new Leg[2];
+            /* Take 2 fore legs and attach them to the body */
             start = System.currentTimeMillis();
-            synchronized (aBodies_complete) {
-                long stop = System.currentTimeMillis();
+            synchronized (aBins.getForeLegs()) {
+                stop = System.currentTimeMillis();
                 idleTime += stop - start;
-                aBodies_complete.push(body);
-                aBodies_complete.notify();
+                /* Wait for 2 fore legs to get produced, if none available */
+                while (aBins.getForeLegs().isEmpty()) {
+                    try {
+                        start = System.currentTimeMillis();
+                        aBins.getForeLegs().wait();
+                        stop = System.currentTimeMillis();
+                        idleTime += stop - start;
+                    } catch (InterruptedException ignored) {
+                        System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
+                        return;
+                    }
+                }
+                foreLegs[0] = aBins.getForeLegs().pop();
+                while (aBins.getForeLegs().isEmpty()) {
+                    try {
+                        start = System.currentTimeMillis();
+                        aBins.getForeLegs().wait();
+                        stop = System.currentTimeMillis();
+                        idleTime += stop - start;
+                    } catch (InterruptedException ignored) {
+                        System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
+                        return;
+                    }
+                }
+                foreLegs[1] = aBins.getForeLegs().pop();
+            }
+            /* Make space for two hind legs */
+            Leg[] hindLegs = new Leg[2];
+            /* Take 2 hind legs and attach them to body */
+            synchronized (aBins.getHindLegs()) {
+                stop = System.currentTimeMillis();
+                idleTime += stop - start;
+                /* Wait for 2 hind legs to get produced, if none available */
+                while (aBins.getHindLegs().isEmpty()) {
+                    try {
+                        start = System.currentTimeMillis();
+                        aBins.getHindLegs().wait();
+                        stop = System.currentTimeMillis();
+                        idleTime += stop - start;
+                    } catch (InterruptedException ignored) {
+                        System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
+                        return;
+                    }
+                }
+                hindLegs[0] = aBins.getHindLegs().pop();
+                while (aBins.getHindLegs().isEmpty()) {
+                    try {
+                        start = System.currentTimeMillis();
+                        aBins.getHindLegs().wait();
+                        stop = System.currentTimeMillis();
+                        idleTime += stop - start;
+                    } catch (InterruptedException ignored) {
+                        System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
+                        return;
+                    }
+                }
+                hindLegs[1] = aBins.getHindLegs().pop();
+            }
+            /* Attach the legs to the body */
+            body.attachForeLegs(foreLegs);
+            body.attachHindLegs(hindLegs);
+            /* If body had a tail, place it in completed bodies bin
+             * If it didn't have a tail, place it in bodies with legs bin */
+            if (bodyHadTail) {
+                start = System.currentTimeMillis();
+                synchronized (aBins.getBodyCompleted()) {
+                    stop = System.currentTimeMillis();
+                    idleTime += stop - start;
+                    /* Put the body on the completed bodies bin */
+                    aBins.getBodyCompleted().push(body);
+                    /* Notify about completed body production */
+                    aBins.getBodyCompleted().notify();
+                }
+            } else {
+                start = System.currentTimeMillis();
+                synchronized (aBins.getBodyWithLegs()) {
+                    stop = System.currentTimeMillis();
+                    idleTime += stop - start;
+                    /* Put the body on the bodies with tails bin */
+                    aBins.getBodyWithTail().push(body);
+                    /* Do not need to notify about production on this bin */
+                }
             }
 
             try {
