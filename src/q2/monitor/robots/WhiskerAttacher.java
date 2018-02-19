@@ -1,16 +1,17 @@
 package q2.monitor.robots;
 
 import q2.monitor.Bins;
+import q2.monitor.Robot;
 import q2.parts.Head;
 import q2.parts.Whisker;
 import util.Util;
 
-public class WhiskerAttacher implements Runnable {
+public class WhiskerAttacher extends Robot {
 
     private final Bins aBins;
-    private long idleTime;
 
-    public WhiskerAttacher(Bins pBins) {
+    public WhiskerAttacher(Bins pBins, String pName) {
+        setName(pName);
         aBins = pBins;
     }
 
@@ -85,7 +86,6 @@ public class WhiskerAttacher implements Runnable {
                 /* Simulate assembly time */
                 Thread.sleep(Util.randInt(20, 60));
             } catch (InterruptedException ignored) {
-                System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
                 return;
             }
         }

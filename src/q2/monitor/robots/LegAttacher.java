@@ -1,16 +1,17 @@
 package q2.monitor.robots;
 
 import q2.monitor.Bins;
+import q2.monitor.Robot;
 import q2.parts.Body;
 import q2.parts.Leg;
 import util.Util;
 
-public class LegAttacher implements Runnable {
+public class LegAttacher extends Robot {
 
     private final Bins aBins;
-    private long idleTime = 0;
 
-    public LegAttacher(Bins pBins) {
+    public LegAttacher(Bins pBins, String pName) {
+        setName(pName);
         aBins = pBins;
     }
 
@@ -56,7 +57,6 @@ public class LegAttacher implements Runnable {
                         stop = System.currentTimeMillis();
                         idleTime += stop - start;
                     } catch (InterruptedException ignored) {
-                        System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
                         return;
                     }
                 }
@@ -68,7 +68,6 @@ public class LegAttacher implements Runnable {
                         stop = System.currentTimeMillis();
                         idleTime += stop - start;
                     } catch (InterruptedException ignored) {
-                        System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
                         return;
                     }
                 }
@@ -88,7 +87,6 @@ public class LegAttacher implements Runnable {
                         stop = System.currentTimeMillis();
                         idleTime += stop - start;
                     } catch (InterruptedException ignored) {
-                        System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
                         return;
                     }
                 }
@@ -100,7 +98,6 @@ public class LegAttacher implements Runnable {
                         stop = System.currentTimeMillis();
                         idleTime += stop - start;
                     } catch (InterruptedException ignored) {
-                        System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
                         return;
                     }
                 }
@@ -136,7 +133,6 @@ public class LegAttacher implements Runnable {
                 /* Simulate assembly time */
                 Thread.sleep(Util.randInt(30, 50));
             } catch (InterruptedException ignored) {
-                System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
                 return;
             }
         }

@@ -1,16 +1,17 @@
 package q2.monitor.robots;
 
 import q2.monitor.Bins;
+import q2.monitor.Robot;
 import q2.parts.Eye;
 import q2.parts.Head;
 import util.Util;
 
-public class EyeAttacher implements Runnable {
+public class EyeAttacher extends Robot {
 
     private final Bins aBins;
-    private long idleTime = 0;
 
-    public EyeAttacher(Bins pBins) {
+    public EyeAttacher(Bins pBins, String pName) {
+        setName(pName);
         aBins = pBins;
     }
 
@@ -85,7 +86,6 @@ public class EyeAttacher implements Runnable {
                 /* Simulate assembly time */
                 Thread.sleep(Util.randInt(10, 30));
             } catch (InterruptedException ignored) {
-                System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
                 return;
             }
         }

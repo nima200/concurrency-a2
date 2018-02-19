@@ -1,19 +1,19 @@
 package q2.monitor.robots;
 
 import q2.monitor.Bins;
+import q2.monitor.Robot;
 import q2.parts.Leg;
 import q2.parts.Toe;
 import util.Util;
 
 import java.util.Random;
 
-public class LegMaker implements Runnable {
+public class LegMaker extends Robot {
 
     private final Bins aBins;
-    private long idleTime = 0;
 
-
-    public LegMaker(Bins pBins) {
+    public LegMaker(Bins pBins, String pName) {
+        setName(pName);
         aBins = pBins;
     }
 
@@ -51,6 +51,7 @@ public class LegMaker implements Runnable {
                 start = System.currentTimeMillis();
                 synchronized (aBins.getForeLegs()) {
                     stop = System.currentTimeMillis();
+                    idleTime += stop - start;
                     /* Add foreleg to bin of forelegs */
                     aBins.getForeLegs().push(foreLeg);
                     /* Notify others about creation */
@@ -95,7 +96,6 @@ public class LegMaker implements Runnable {
             try {
                 Thread.sleep(Util.randInt(10, 20));
             } catch (InterruptedException ignored) {
-                System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
                 return;
             }
         }
