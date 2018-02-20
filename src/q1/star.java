@@ -49,7 +49,6 @@ public class star {
         }
 
         BufferedImage img = new BufferedImage(1920,1080,BufferedImage.TYPE_INT_ARGB);
-        Color black = new Color(0, 0, 0);
         Vertex current = v_1;
         Graphics graphics = img.getGraphics();
         graphics.setColor(Color.BLACK);
@@ -67,7 +66,7 @@ public class star {
         translate(vertices, -minX, -minY);
         scale(vertices, scaleFactor, scaleFactor);
         translate(vertices, -((1920 * 0.9) / 2.0), -((1080 * 0.9) / 2.0));
-        translate(vertices, 1920 / 2.0, 1920 / 2.0);
+        translate(vertices, 960, 1080 / 2.0);
 
         Polygon p = new Polygon();
         do {
