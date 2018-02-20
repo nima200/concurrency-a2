@@ -1,5 +1,6 @@
 package q2.monitor;
 
+import q2.Robot;
 import q2.monitor.robots.*;
 import q2.parts.*;
 import util.Util;
@@ -42,9 +43,7 @@ public class catmaker {
             long idleTime = 0;
             long idleStart;
             long idleStop;
-            long start;
-            long stop;
-            start = System.currentTimeMillis();
+            long start = System.currentTimeMillis();
             while (aCats.size() < 250) {
                 Body body;
                 Head head;
@@ -88,7 +87,7 @@ public class catmaker {
                     return;
                 }
             }
-            stop = System.currentTimeMillis();
+            long stop = System.currentTimeMillis();
             float idlePercentage = ((float) idleTime / ((float) (stop - start))) * 100;
             System.out.println(Thread.currentThread().getName() + " idle proportion: " + idlePercentage);
             for (Robot robot: robots) {

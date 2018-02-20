@@ -1,7 +1,7 @@
 package q2.monitor.robots;
 
 import q2.monitor.Bins;
-import q2.monitor.Robot;
+import q2.Robot;
 import q2.parts.Head;
 import q2.parts.Whisker;
 import util.Util;

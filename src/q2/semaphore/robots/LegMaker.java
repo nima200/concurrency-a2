@@ -1,5 +1,6 @@
 package q2.semaphore.robots;
 
+import q2.Robot;
 import q2.parts.Leg;
 import q2.parts.Toe;
 import q2.semaphore.Bins;
@@ -7,12 +8,12 @@ import util.Util;
 
 import java.util.Random;
 
-public class LegMaker implements Runnable {
+public class LegMaker extends Robot {
 
     private final Bins aBins;
-    private long idleTime = 0;
 
-    public LegMaker(Bins pBins) {
+    public LegMaker(Bins pBins, String pName) {
+        setName(pName);
         aBins = pBins;
     }
 
@@ -94,7 +95,6 @@ public class LegMaker implements Runnable {
                 /* Simulate assembly time */
                 Thread.sleep(Util.randInt(10, 20));
             } catch (InterruptedException ignored) {
-                System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
                 return;
             }
         }

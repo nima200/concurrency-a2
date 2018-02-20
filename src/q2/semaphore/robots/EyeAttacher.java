@@ -1,16 +1,17 @@
 package q2.semaphore.robots;
 
+import q2.Robot;
 import q2.parts.Eye;
 import q2.parts.Head;
 import q2.semaphore.Bins;
 import util.Util;
 
-public class EyeAttacher implements Runnable {
+public class EyeAttacher extends Robot {
 
     private final Bins aBins;
-    private long idleTime = 0;
 
-    public EyeAttacher(Bins pBins) {
+    public EyeAttacher(Bins pBins, String pName) {
+        setName(pName);
         aBins = pBins;
     }
 
@@ -80,7 +81,6 @@ public class EyeAttacher implements Runnable {
                 }
                 Thread.sleep(Util.randInt(10, 30));
             } catch (InterruptedException ignored) {
-                System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
                 return;
             }
         }

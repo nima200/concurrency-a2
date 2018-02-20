@@ -1,4 +1,4 @@
-package q2.monitor;
+package q2;
 
 public class Robot extends Thread {
     private long startTime = 0;

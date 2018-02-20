@@ -26,6 +26,7 @@ public class Mover implements Runnable {
             int previousIndex = (index + length - 1) % length;
             int nextIndex = (index + 1) % length;
             int[] indices = {previousIndex, index, nextIndex};
+            /* Order resources for preventing deadlock */
             Arrays.sort(indices);
             Vertex first = aVertices.vertexAtIndex(indices[0]);
             Vertex second = aVertices.vertexAtIndex(indices[1]);

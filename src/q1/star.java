@@ -51,28 +51,78 @@ public class star {
         BufferedImage img = new BufferedImage(1920,1080,BufferedImage.TYPE_INT_ARGB);
         Color black = new Color(0, 0, 0);
         Vertex current = v_1;
-
-        for (int i = 0; i < 1920; i++) {
-            img.setRGB(i, 540, black.getRGB());
-        }
-
-        for (int i = 0; i < 1080; i++) {
-            img.setRGB(960, i, black.getRGB());
-        }
         Graphics graphics = img.getGraphics();
         graphics.setColor(Color.BLACK);
 
+        double[] minXY = findMin(vertices);
+        double[] maxXY = findMax(vertices);
+        double minX = minXY[0], minY = minXY[1], maxX = maxXY[0], maxY = maxXY[1];
+        double currentWidth = maxX - minX;
+        double currentHeight = maxY - minY;
+        double scaleX = (1920 * 0.9) / currentWidth;
+        double scaleY = (1080 * 0.9) / currentHeight;
+        double scaleFactor = Math.min(scaleX, scaleY);
+        translate(vertices, -minX, -minY);
+        scale(vertices, scaleFactor, scaleFactor);
+        translate(vertices, -((1920 * 0.9) / 2.0), -((1080 * 0.9) / 2.0));
+        translate(vertices, 1920 / 2.0, 1920 / 2.0);
+
         Polygon p = new Polygon();
         do {
-            int x = 960 + (int) ((current.getX()) * (1920 / 8));
-            int y = 540 + (int) ((current.getY()) * (1080 / 8));
+//            int x = 960 + (int) ((current.getX()) * (1920 / 8));
+//            int y = 540 + (int) ((current.getY()) * (1080 / 8));
+            int x = (int) current.getX();
+            int y = (int) current.getY();
             p.addPoint(x, y);
             graphics.fillOval(x, y, 5, 5);
-            System.out.println("x: " + ((current.getX()) * (1920 / 8))  + " y: " + ((current.getY()) * (1080 / 8)));
+            System.out.println("x: " + ((current.getX()))  + " y: " + current.getY());
             current = current.getNext();
         } while(current != v_1);
         graphics.drawPolygon(p);
         File outputfile = new File("outputimage.png");
         ImageIO.write(img, "png", outputfile);
     }
+
+    public static double[] findMin(DLinkedList vertices) {
+        Vertex current = vertices.getHead();
+        double minX = current.getX();
+        double minY = current.getY();
+        do {
+            if (current.getX() < minX) minX = current.getX();
+            if (current.getY() < minY) minY = current.getY();
+            current = current.getNext();
+        } while (current != vertices.getHead());
+        return new double[] {minX, minY};
+    }
+
+    public static double[] findMax(DLinkedList vertices) {
+        Vertex current = vertices.getHead();
+        double maxX = current.getX();
+        double maxY = current.getY();
+        do {
+            if (current.getX() > maxX) maxX = current.getX();
+            if (current.getY() > maxY) maxY = current.getY();
+            current = current.getNext();
+        } while (current != vertices.getHead());
+        return new double[] {maxX, maxY};
+    }
+
+    public static void translate(DLinkedList vertices, double translateX, double translateY) {
+        Vertex current = vertices.getHead();
+        do {
+            current.setX(current.getX() + translateX);
+            current.setY(current.getY() + translateY);
+            current = current.getNext();
+        } while (current != vertices.getHead());
+    }
+
+    public static void scale(DLinkedList vertices, double scaleX, double scaleY) {
+        Vertex current = vertices.getHead();
+        do {
+            current.setX(current.getX() * scaleX);
+            current.setY(current.getY() * scaleY);
+            current = current.getNext();
+        } while (current != vertices.getHead());
+    }
+
 }

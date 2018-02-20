@@ -1,16 +1,17 @@
 package q2.semaphore.robots;
 
+import q2.Robot;
 import q2.parts.Body;
 import q2.parts.Tail;
 import q2.semaphore.Bins;
 import util.Util;
 
-public class TailAttacher implements Runnable {
+public class TailAttacher extends Robot {
 
     private final Bins aBins;
-    private long idleTime = 0;
 
-    public TailAttacher(Bins pBins) {
+    public TailAttacher(Bins pBins, String pName) {
+        setName(pName);
         aBins = pBins;
     }
 
@@ -77,7 +78,6 @@ public class TailAttacher implements Runnable {
                     Thread.sleep(Util.randInt(10, 20));
                 }
             } catch (InterruptedException ignored) {
-                System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
                 return;
             }
         }

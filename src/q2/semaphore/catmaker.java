@@ -1,5 +1,6 @@
 package q2.semaphore;
 
+import q2.Robot;
 import q2.parts.*;
 import q2.semaphore.robots.*;
 import util.Util;
@@ -24,51 +25,52 @@ public class catmaker {
         }
 
         /* Create the robot threads */
-        Thread eyeAttacher_1 = new Thread(new EyeAttacher(aBins), "Eye Attacher 1");
-        Thread eyeAttacher_2 = new Thread(new EyeAttacher(aBins), "Eye Attacher 2");
-        Thread legAttacher_1 = new Thread(new LegAttacher(aBins), "Leg Attacher 1");
-        Thread legAttacher_2 = new Thread(new LegAttacher(aBins), "Leg Attacher 2");
-        Thread legMaker_1 = new Thread(new LegMaker(aBins), "Leg Maker 1");
-        Thread legMaker_2 = new Thread(new LegMaker(aBins), "Leg Maker 2");
-        Thread tailAttacher_1 = new Thread(new TailAttacher(aBins), "Tail Attacher 1");
-        Thread tailAttacher_2 = new Thread(new TailAttacher(aBins), "Tail Attacher 2");
-        Thread whiskerAttacher_1 = new Thread(new WhiskerAttacher(aBins), "Whisker Attacher 1");
-        Thread whiskerAttacher_2 = new Thread(new WhiskerAttacher(aBins), "Whisker Attacher 2");
+        Robot eyeAttacher_1 = new EyeAttacher(aBins, "Eye Attacher 1");
+        Robot eyeAttacher_2 = new EyeAttacher(aBins, "Eye Attacher 2");
+        Robot legAttacher_1 = new LegAttacher(aBins, "Leg Attacher 1");
+        Robot legAttacher_2 = new LegAttacher(aBins, "Leg Attacher 2");
+        Robot legMaker_1 = new LegMaker(aBins, "Leg Maker 1");
+        Robot legMaker_2 = new LegMaker(aBins, "Leg Maker 2");
+        Robot tailAttacher_1 = new TailAttacher(aBins, "Tail Attacher 1");
+        Robot tailAttacher_2 = new TailAttacher(aBins, "Tail Attacher 2");
+        Robot whiskerAttacher_1 = new WhiskerAttacher(aBins, "Whisker Attacher 1");
+        Robot whiskerAttacher_2 = new WhiskerAttacher(aBins, "Whisker Attacher 2");
 
-        Thread[] robots = {eyeAttacher_1, eyeAttacher_2, legAttacher_1, legAttacher_2, legMaker_1, legMaker_2,
+        Robot[] robots = {eyeAttacher_1, eyeAttacher_2, legAttacher_1, legAttacher_2, legMaker_1, legMaker_2,
                         tailAttacher_1, tailAttacher_2, whiskerAttacher_1, whiskerAttacher_2};
 
         Thread catMaker = new Thread(() -> {
-            long start;
-            long stop;
+            long idleStart;
+            long idleStop;
             long idleTime = 0;
+            long start = System.currentTimeMillis();
             while (aCats.size() < 250) {
                 try {
                     Body body;
                     Head head;
                     /* Wait for a completed body */
-                    start = System.currentTimeMillis();
+                    idleStart = System.currentTimeMillis();
                     aBins.getBodyCompleted().consume();
-                    stop = System.currentTimeMillis();
-                    idleTime += stop - start;
+                    idleStop = System.currentTimeMillis();
+                    idleTime += idleStop - idleStart;
                     /* Take the completed body */
-                    start = System.currentTimeMillis();
+                    idleStart = System.currentTimeMillis();
                     aBins.getBodyCompleted().getAccess();
-                    stop = System.currentTimeMillis();
-                    idleTime += stop - start;
+                    idleStop = System.currentTimeMillis();
+                    idleTime += idleStop - idleStart;
                     body = aBins.getBodyCompleted().pop();
                     aBins.getBodyCompleted().releaseAccess();
 
                     /* Wait for a completed head */
-                    start = System.currentTimeMillis();
+                    idleStart = System.currentTimeMillis();
                     aBins.getHeadCompleted().consume();
-                    stop = System.currentTimeMillis();
-                    idleTime += stop - start;
+                    idleStop = System.currentTimeMillis();
+                    idleTime += idleStop - idleStart;
                     /* Take the completed head */
-                    start = System.currentTimeMillis();
+                    idleStart = System.currentTimeMillis();
                     aBins.getHeadCompleted().getAccess();
-                    stop = System.currentTimeMillis();
-                    idleTime += stop - start;
+                    idleStop = System.currentTimeMillis();
+                    idleTime += idleStop - idleStart;
                     head = aBins.getHeadCompleted().pop();
                     aBins.getHeadCompleted().releaseAccess();
 
@@ -77,15 +79,18 @@ public class catmaker {
                     aCats.add(cat);
                     /* Simulate Assembly*/
                     Thread.sleep(Util.randInt(10, 20));
-                } catch (InterruptedException pE) {
-                    System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
+                } catch (InterruptedException ignored) {
                     return;
                 }
             }
-            for (Thread robot: robots) {
+            long stop = System.currentTimeMillis();
+            float idlePercentage = ((float) idleTime / ((float) (stop - start))) * 100;
+            System.out.println(Thread.currentThread().getName() + " idle proportion: " + idlePercentage);
+            for (Robot robot: robots) {
                 robot.interrupt();
+                System.out.println(robot.getName() + " idle proportion: " + robot.getIdlePercentage());
             }
-            System.out.println(Thread.currentThread().getName() + " idle time: " + idleTime);
+
         }, "Cat Maker");
 
         for (Thread robot: robots) {
