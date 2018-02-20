@@ -54,6 +54,8 @@ public class star {
         Graphics graphics = img.getGraphics();
         graphics.setColor(Color.BLACK);
 
+        /* Scale and move to center */
+        /* Does not work at all ... */
         double[] minXY = findMin(vertices);
         double[] maxXY = findMax(vertices);
         double minX = minXY[0], minY = minXY[1], maxX = maxXY[0], maxY = maxXY[1];
@@ -69,8 +71,6 @@ public class star {
 
         Polygon p = new Polygon();
         do {
-//            int x = 960 + (int) ((current.getX()) * (1920 / 8));
-//            int y = 540 + (int) ((current.getY()) * (1080 / 8));
             int x = (int) current.getX();
             int y = (int) current.getY();
             p.addPoint(x, y);
